@@ -1,3 +1,10 @@
+const ResponseType = {
+  STAGE_1: 'STAGE_1',
+  STAGE_2: 'STAGE_2',
+  STAGE_3: 'STAGE_3',
+}
+
+
 class Entity {
   startButton = null
   statusLabel = null
@@ -5,6 +12,14 @@ class Entity {
   constructor(startButtonElement, statusLabelElement) {
     this.startButton = startButtonElement
     this.statusLabel = statusLabelElement
+  }
+
+  updateLabel(value) {
+    this.statusLabel.value = value
+  }
+
+  addStartButtonListener(event, callback) {
+    this.startButton.addEventListener(event, callback)
   }
 }
 
@@ -21,13 +36,29 @@ class WebsocketManager {
     //  * right now let's do hard coded subscriptions, but really we should add an `addSubscription` 
     //  * method and then keep an array of subscriptions to apply
 
-    this.stompClient.subscribe('/topic/messages', (messageData) => {
-      console.log(messageData)
+    this.stompClient.subscribe('/topic/messages', (response) => {
+      const messageData = JSON.parse(response.body)
+      this.handleServerMessage(messageData)
     })
   }
 
   sendMessage(message) {
     this.stompClient.send("/app/messages", {}, JSON.stringify({ "to": "user 2", "content": "test" }))
+  }
+
+  handleServerMessage(message) {
+    switch (message.type)
+    {
+      case ResponseType.STAGE_1:
+        console.log("stage 1")
+        break
+      case ResponseType.STAGE_2:
+        console.log("stage 2")
+        break
+      case ResponseType.STAGE_3:
+        console.log("stage 3")
+        break
+    }
   }
 }
 
@@ -55,7 +86,7 @@ class EntityProcessor {
 
   attachListeners() {
     this.entities.forEach(entity => {
-      entity.startButton.addEventListener("click", () => {
+      entity.addStartButtonListener("click", () => {
         this.websocketManager.sendMessage("entity-1") // todo: come back and make this more concrete
       })
     })
