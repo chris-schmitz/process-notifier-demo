@@ -12,7 +12,7 @@ class WebsocketManager {
   stompClient = null
 
   connect() {
-    let socket = new SocketJS("/ws")
+    let socket = new SockJS("/ws")
     this.stompClient = Stomp.over(socket)
     this.stompClient.connect({}, this.applySubscriptions.bind(this))
   }
@@ -27,7 +27,7 @@ class WebsocketManager {
   }
 
   sendMessage(message) {
-    
+    this.stompClient.send("/app/messages", {}, JSON.stringify({ "to": "user 2", "content": "test" }))
   }
 }
 
@@ -42,12 +42,14 @@ class EntityProcessor {
 
   begin() {
     this.grabElements()
+    this.attachListeners()
+    this.websocketManager.connect()
   }
 
   grabElements() {
     document.querySelectorAll(".entity")
       .forEach((entity, index) => {
-        this.entities[index] = Entity(entity.querySelector(".start-button"), entity.querySelector(".status-label"))
+        this.entities[index] = new Entity(entity.querySelector(".start-button"), entity.querySelector(".status-label"))
       })
   }
 
@@ -59,3 +61,10 @@ class EntityProcessor {
     })
   }
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const socketManager = new WebsocketManager()
+  const entityProcessor = window.ep = new EntityProcessor(socketManager)
+
+  entityProcessor.begin()
+})
