@@ -6,10 +6,16 @@ const ResponseType = {
 
 
 class Entity {
+  id = null
+  nameElement = null
+  checkboxElement = null
   startButton = null
   statusLabel = null
 
-  constructor(startButtonElement, statusLabelElement) {
+  constructor(id, nameElement, checkboxElement, startButtonElement, statusLabelElement) {
+    this.id = id
+    this.nameElement = nameElement
+    this.checkboxElement = checkboxElement
     this.startButton = startButtonElement
     this.statusLabel = statusLabelElement
   }
@@ -20,6 +26,39 @@ class Entity {
 
   addStartButtonListener(event, callback) {
     this.startButton.addEventListener(event, callback)
+  }
+
+  get name() {
+    return this.nameElement.innerHTML
+  }
+
+  get isSelected() {
+    return this.checkboxElement.checked
+  }
+
+}
+
+class ProcessEntityRequest {
+  name = null
+
+  constructor(name) {
+    this.name = name
+  }
+
+  serialize() {
+    return JSON.stringify({name: this.name})
+  }
+}
+
+class ProcessEntitiesRequest {
+  entities = []
+
+  addEntity(name) {
+    this.entities.push(name)
+  }
+
+  serialize() {
+    return JSON.stringify(this.entities.map(name => ({name})))
   }
 }
 
@@ -33,7 +72,7 @@ class WebsocketManager {
   }
 
   applySubscriptions() {
-    //  * right now let's do hard coded subscriptions, but really we should add an `addSubscription` 
+    //  * right now let's do hard coded subscriptions, but really we should add an `addSubscription`
     //  * method and then keep an array of subscriptions to apply
 
     this.stompClient.subscribe('/topic/messages', (response) => {
@@ -43,12 +82,13 @@ class WebsocketManager {
   }
 
   sendMessage(message) {
-    this.stompClient.send("/app/messages", {}, JSON.stringify({ "to": "user 2", "content": "test" }))
+    console.log("sending message")
+    console.log(message.serialize())
+    this.stompClient.send("/app/messages", {}, message.serialize())
   }
 
   handleServerMessage(message) {
-    switch (message.type)
-    {
+    switch (message.type) {
       case ResponseType.STAGE_1:
         console.log("stage 1")
         break
@@ -70,6 +110,7 @@ class EntityProcessor {
   }
 
   entities = [];
+  processAllButton = null
 
   begin() {
     this.grabElements()
@@ -80,16 +121,45 @@ class EntityProcessor {
   grabElements() {
     document.querySelectorAll(".entity")
       .forEach((entity, index) => {
-        this.entities[index] = new Entity(entity.querySelector(".start-button"), entity.querySelector(".status-label"))
+        this.entities[index] = new Entity(
+          entity.id,
+          entity.querySelector(".entity-name"),
+          entity.querySelector("input[type='checkbox']"),
+          entity.querySelector("button[name='process-button']"),
+          entity.querySelector(".status-label")
+        )
       })
+
+    this.processAllButton = document.querySelector("button[name='process-selected']")
   }
 
   attachListeners() {
     this.entities.forEach(entity => {
-      entity.addStartButtonListener("click", () => {
-        this.websocketManager.sendMessage("entity-1") // todo: come back and make this more concrete
-      })
+      entity.addStartButtonListener("click", (event) => this.startProcessingSingleEntity(event))
     })
+    this.processAllButton.addEventListener("click", this.startProcessingSelectedEntities.bind(this))
+  }
+
+  startProcessingSelectedEntities() {
+    const request = new ProcessEntitiesRequest()
+    this.getSelectedEntities().map(entity => request.addEntity(entity.name))
+    this.websocketManager.sendMessage(request)
+  }
+
+  startProcessingSingleEntity(event) {
+    const parent = event.target.closest("tr")
+    const entity = this.findEntityById(parent.id)
+    this.websocketManager.sendMessage(new ProcessEntityRequest(entity.name))
+  }
+
+
+  findEntityById(id) {
+    return this.entities
+      .find(entity => entity.id === id)
+  }
+
+  getSelectedEntities() {
+    return this.entities.filter(entity => entity.isSelected === true)
   }
 }
 
