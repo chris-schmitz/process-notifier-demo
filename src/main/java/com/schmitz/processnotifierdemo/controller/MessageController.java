@@ -1,12 +1,14 @@
 package com.schmitz.processnotifierdemo.controller;
 
-import com.schmitz.processnotifierdemo.dto.Message;
+import com.schmitz.processnotifierdemo.dto.ProcessEntityRequest;
 import com.schmitz.processnotifierdemo.dto.Response;
 import com.schmitz.processnotifierdemo.dto.ResponseType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import java.util.List;
 
 // TODO: adjust to fit processing idea
 // * we need a couple of things to make this fit the processing concept:
@@ -21,9 +23,20 @@ public class MessageController {
     @Autowired
     SimpMessagingTemplate simpMessagingTemplate;
 
-    @MessageMapping("/messages")
-    public void relayMessage(Message message) throws InterruptedException {
+    @MessageMapping("/process/entity")
+    public void processEntity(ProcessEntityRequest request) throws InterruptedException {
         fakeProcesses("test");
+    }
+
+    @MessageMapping("/process/entities")
+    public void processEntities(List<ProcessEntityRequest> request) {
+        request.forEach(entity -> {
+            try {
+                fakeProcesses(entity.getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void fakeProcesses(String from) throws InterruptedException {

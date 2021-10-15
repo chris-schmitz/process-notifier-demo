@@ -40,6 +40,7 @@ class Entity {
 
 class ProcessEntityRequest {
   name = null
+  topic = "/app/process/entity"
 
   constructor(name) {
     this.name = name
@@ -48,10 +49,15 @@ class ProcessEntityRequest {
   serialize() {
     return JSON.stringify({name: this.name})
   }
+
+  get topic() {
+    return this.topic
+  }
 }
 
 class ProcessEntitiesRequest {
   entities = []
+  topic = "/app/process/entities"
 
   addEntity(name) {
     this.entities.push(name)
@@ -59,6 +65,10 @@ class ProcessEntitiesRequest {
 
   serialize() {
     return JSON.stringify(this.entities.map(name => ({name})))
+  }
+
+  get topic() {
+    return this.topic
   }
 }
 
@@ -84,7 +94,7 @@ class WebsocketManager {
   sendMessage(message) {
     console.log("sending message")
     console.log(message.serialize())
-    this.stompClient.send("/app/messages", {}, message.serialize())
+    this.stompClient.send(message.topic, {}, message.serialize())
   }
 
   handleServerMessage(message) {
