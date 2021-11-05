@@ -1,11 +1,12 @@
 package com.schmitz.processnotifierdemo.service;
 
 import com.schmitz.processnotifierdemo.dto.Entity;
-import com.schmitz.processnotifierdemo.dto.ProcessEntityResponse;
-import com.schmitz.processnotifierdemo.dto.ResponseType;
-import org.junit.jupiter.api.BeforeEach;
+import com.schmitz.processnotifierdemo.dto.ProcessingStages;
+import com.schmitz.processnotifierdemo.dto.ProcessingUpdateResponse;
+import com.schmitz.processnotifierdemo.factories.ProcessingUpdateResponseFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -20,24 +21,21 @@ public class SomeFakeProcessorTest {
     SimpMessagingTemplate messagingTemplate;
 
     @Mock
-    ProcessEntityResponse response;
+    ProcessingUpdateResponseFactory responseFactory;
 
+    @InjectMocks
     SomeFakeProcessor processor;
 
-    @BeforeEach
-    void setUp() {
-        processor = new SomeFakeProcessor(messagingTemplate, response);
-    }
 
     @Test
     void executeProcess_expect_response_relayed_to_users() throws InterruptedException {
         Entity entity = new Entity("user1", "entity1");
-        ProcessEntityResponse response1 = new ProcessEntityResponse(entity.getName(), entity.getFrom(), ResponseType.STAGE_1);
-        ProcessEntityResponse response2 = new ProcessEntityResponse(entity.getName(), entity.getFrom(), ResponseType.STAGE_2);
-        ProcessEntityResponse response3 = new ProcessEntityResponse(entity.getName(), entity.getFrom(), ResponseType.STAGE_3);
-        when(response.generate(entity.getName(), entity.getFrom(), ResponseType.STAGE_1)).thenReturn(response1);
-        when(response.generate(entity.getName(), entity.getFrom(), ResponseType.STAGE_2)).thenReturn(response2);
-        when(response.generate(entity.getName(), entity.getFrom(), ResponseType.STAGE_3)).thenReturn(response3);
+        ProcessingUpdateResponse response1 = new ProcessingUpdateResponse(entity.getName(), entity.getFrom(), ProcessingStages.STAGE_1);
+        ProcessingUpdateResponse response2 = new ProcessingUpdateResponse(entity.getName(), entity.getFrom(), ProcessingStages.STAGE_2);
+        ProcessingUpdateResponse response3 = new ProcessingUpdateResponse(entity.getName(), entity.getFrom(), ProcessingStages.STAGE_3);
+        when(responseFactory.build(entity.getName(), entity.getFrom(), ProcessingStages.STAGE_1)).thenReturn(response1);
+        when(responseFactory.build(entity.getName(), entity.getFrom(), ProcessingStages.STAGE_2)).thenReturn(response2);
+        when(responseFactory.build(entity.getName(), entity.getFrom(), ProcessingStages.STAGE_3)).thenReturn(response3);
 
         processor.process(entity);
 

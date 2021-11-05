@@ -1,8 +1,9 @@
 package com.schmitz.processnotifierdemo.service;
 
 import com.schmitz.processnotifierdemo.dto.Entity;
-import com.schmitz.processnotifierdemo.dto.ProcessingCompleteResponse;
+import com.schmitz.processnotifierdemo.factories.ProcessingCompleteResponseFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
@@ -15,25 +16,58 @@ import java.util.ArrayList;
 // | those messages via their subscriptions.
 // | So, yeah it's sync on the server side but this is still a good example of how sync here doesn't necessarily mean
 // | sync between the client and server like it does with regular http requests.
+@Service
 public class EntityProcessorService {
 
     private SimpMessagingTemplate messagingTemplate;
     private SomeFakeProcessor fakeProcessor;
-    private ProcessingCompleteResponse response;
+
+    private ProcessingCompleteResponseFactory processingCompleteResponseFactory;
     private String messageTopic;
 
-    public EntityProcessorService(SimpMessagingTemplate messagingTemplate, SomeFakeProcessor fakeProcessor, ProcessingCompleteResponse response) {
+    public EntityProcessorService(SimpMessagingTemplate messagingTemplate, SomeFakeProcessor fakeProcessor, ProcessingCompleteResponseFactory processingCompleteResponseFactory) {
         this.messagingTemplate = messagingTemplate;
         this.fakeProcessor = fakeProcessor;
-        this.response = response;
+        this.processingCompleteResponseFactory = processingCompleteResponseFactory;
     }
 
 
     public void processEntity(Entity entity) throws InterruptedException {
+        ArrayList<Entity> successful = new ArrayList<>();
+        ArrayList<Entity> failed = new ArrayList<>();
+        successful.add(entity);
+        try {
+            sendToProcessor(entity);
+        } catch (InterruptedException e) {
+            failed.add(entity);
+        }
+        sendProcessCompleteNotification(entity.getFrom(), successful, failed);
+    }
+
+    private void sendToProcessor(Entity entity) throws InterruptedException {
         fakeProcessor.process(entity);
-        ArrayList<Entity> entities = new ArrayList<>();
-        entities.add(entity);
-        messagingTemplate.convertAndSendToUser(entity.getFrom(), getMessageTopic(), response.generate(entities));
+    }
+
+    private void sendProcessCompleteNotification(String username, ArrayList<Entity> successful, ArrayList<Entity> failed) {
+        messagingTemplate.convertAndSendToUser(username, getMessageTopic(), processingCompleteResponseFactory.build(successful, failed));
+    }
+
+
+    public void processEntities(String from, ArrayList<Entity> entities) {
+        ArrayList<Entity> successful = new ArrayList<Entity>();
+        ArrayList<Entity> failed = new ArrayList<Entity>();
+
+        for (Entity entity : entities) {
+            try {
+                sendToProcessor(entity);
+                successful.add(entity);
+            } catch (InterruptedException e) {
+                failed.add(entity);
+                e.printStackTrace();
+            }
+        }
+
+        sendProcessCompleteNotification(from, successful, failed);
     }
 
     public String getMessageTopic() {
@@ -44,20 +78,4 @@ public class EntityProcessorService {
         this.messageTopic = messageTopic;
     }
 
-    public void processEntities(String from, ArrayList<Entity> entities) {
-        entities.forEach(entity -> {
-            try {
-                fakeProcessor.process(entity);
-            } catch (InterruptedException e) {
-                // Todo: start from here
-                // ? hmmmmmmmmmmm what do we want to do here??
-                // ? really, really we should make a list of failed processes and then if it's not empty
-                // ? message down to the client with a report of what worked and what didn't.
-                // ? what do you think, future me? ;P
-                e.printStackTrace();
-            }
-        });
-
-
-    }
 }

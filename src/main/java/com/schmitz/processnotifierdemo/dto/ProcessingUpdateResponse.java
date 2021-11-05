@@ -1,19 +1,18 @@
 package com.schmitz.processnotifierdemo.dto;
 
-public class ProcessEntityResponse {
+public class ProcessingUpdateResponse {
     String entityName;
     String from;
-    ResponseType type;
+    ProcessingStages type;
 
-
-    public ProcessEntityResponse(String entityName, String from, ResponseType type) {
+    public ProcessingUpdateResponse(String entityName, String from, ProcessingStages type) {
         this.entityName = entityName;
         this.from = from;
         this.type = type;
     }
 
-    public ProcessEntityResponse generate(String entityName, String from, ResponseType type) {
-        return new ProcessEntityResponse(entityName, from, type);
+    public ProcessingUpdateResponse generate(String entityName, String from, ProcessingStages type) {
+        return new ProcessingUpdateResponse(entityName, from, type);
     }
 
     // TODO: figure out if these are actually needed for the simpMessageTemplate
@@ -25,7 +24,7 @@ public class ProcessEntityResponse {
         return from;
     }
 
-    public ResponseType getType() {
+    public ProcessingStages getType() {
         return type;
     }
 }

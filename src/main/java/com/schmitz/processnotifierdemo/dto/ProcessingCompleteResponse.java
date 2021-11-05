@@ -3,13 +3,11 @@ package com.schmitz.processnotifierdemo.dto;
 import java.util.List;
 
 public class ProcessingCompleteResponse {
-    private final List<Entity> entities;
+    private final List<Entity> successful;
+    private final List<Entity> failed;
 
-    public ProcessingCompleteResponse(List<Entity> entities) {
-        this.entities = entities;
-    }
-
-    public ProcessingCompleteResponse generate(List<Entity> entities) {
-        return new ProcessingCompleteResponse(entities);
+    public ProcessingCompleteResponse(List<Entity> successful, List<Entity> failed) {
+        this.successful = successful;
+        this.failed = failed;
     }
 }

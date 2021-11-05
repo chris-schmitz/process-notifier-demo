@@ -56,8 +56,8 @@ class ProcessEntityRequest {
 }
 
 class ProcessEntitiesRequest {
-  entities = []
-  topic = "/app/process/entities"
+  _entities = []
+  _topic = "/app/process/entities"
 
   addEntity(name) {
     this.entities.push(name)
@@ -67,8 +67,12 @@ class ProcessEntitiesRequest {
     return JSON.stringify(this.entities.map(name => ({name})))
   }
 
+  get entities() {
+    return this._entities
+  }
+
   get topic() {
-    return this.topic
+    return this._topic
   }
 }
 

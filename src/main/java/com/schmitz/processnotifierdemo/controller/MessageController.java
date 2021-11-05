@@ -1,11 +1,11 @@
 package com.schmitz.processnotifierdemo.controller;
 
+import com.schmitz.processnotifierdemo.dto.Entity;
 import com.schmitz.processnotifierdemo.dto.ProcessEntityRequest;
-import com.schmitz.processnotifierdemo.dto.ProcessEntityResponse;
-import com.schmitz.processnotifierdemo.dto.ResponseType;
+import com.schmitz.processnotifierdemo.factories.EntityFactory;
+import com.schmitz.processnotifierdemo.service.EntityProcessorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 // TODO: adjust to fit processing idea
@@ -18,35 +18,22 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class MessageController {
-    @Autowired
-    SimpMessagingTemplate simpMessagingTemplate;
 
+    @Autowired
+    EntityFactory entityFactory;
+
+    @Autowired
+    EntityProcessorService processorService;
+
+    // TODO: replace and add some kind of authenticated user setup
     @MessageMapping("/process/entity")
     public void processEntity(ProcessEntityRequest request) throws InterruptedException {
-        //        fakeProcesses("test");
+        Entity entity = entityFactory.build("some user", request.getName());
+
+        processorService.processEntity(entity);
     }
 
-    //    @MessageMapping("/process/entities")
-    //    public void processEntities(List<ProcessEntityRequest> request) {
-    //        request.forEach(entity -> {
-    //            try {
-    //                fakeProcesses(entity.getName());
-    //            } catch (InterruptedException e) {
-    //                e.printStackTrace();
-    //            }
-    //        });
-    //    }
-
-    private void fakeProcesses(String from, String entityName) throws InterruptedException {
-        Thread.sleep(2000);
-        sendStatusUpdate(from, ResponseType.STAGE_1);
-        Thread.sleep(1000);
-        sendStatusUpdate(from, ResponseType.STAGE_2);
-        Thread.sleep(2500);
-        sendStatusUpdate(from, ResponseType.STAGE_3);
-    }
-
-    public void sendStatusUpdate(String from, ResponseType type) {
-        simpMessagingTemplate.convertAndSend("/topic/messages", new ProcessEntityResponse("status-update", "test", type));
-    }
+    //public void sendStatusUpdate(String from, ResponseType type) {
+    //    simpMessagingTemplate.convertAndSend("/topic/messages", new ProcessEntityResponse("status-update", "test", type));
+    //}
 }
