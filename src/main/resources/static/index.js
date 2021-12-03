@@ -78,11 +78,16 @@ class ProcessEntitiesRequest {
 
 class WebsocketManager {
   stompClient = null
+  updateStageCallback = null
 
   connect() {
     let socket = new SockJS("/ws")
     this.stompClient = Stomp.over(socket)
     this.stompClient.connect({}, this.applySubscriptions.bind(this))
+  }
+
+  setUpdateStageCallback(callback) {
+    this.updateStageCallback = callback
   }
 
   applySubscriptions() {
@@ -102,15 +107,19 @@ class WebsocketManager {
   }
 
   handleServerMessage(message) {
+    console.log(`Message type: ${message.type} sent from user: ${message.from} for entity: ${message.entityName} `)
     switch (message.type) {
       case ResponseType.STAGE_1:
         console.log("stage 1")
+        this.updateStageCallback(message.entityName, "purple")
         break
       case ResponseType.STAGE_2:
         console.log("stage 2")
+        this.updateStageCallback(message.entityName, "orange")
         break
       case ResponseType.STAGE_3:
         console.log("stage 3")
+        this.updateStageCallback(message.entityName, "green")
         break
     }
   }
@@ -121,6 +130,12 @@ class EntityProcessor {
 
   constructor(websocketManager) {
     this.websocketManager = websocketManager
+    this.websocketManager.setUpdateStageCallback(this.updateStageCallback.bind(this))
+    // this.websocketManager.setUpdateStageCallback((message) => {
+    //   debugger
+    //   console.log('in the update stage callback')
+    //   console.log(message)
+    // })
   }
 
   entities = [];
@@ -163,6 +178,7 @@ class EntityProcessor {
   startProcessingSingleEntity(event) {
     const parent = event.target.closest("tr")
     const entity = this.findEntityById(parent.id)
+    entity.statusLabel.textContent = "⬤"
     this.websocketManager.sendMessage(new ProcessEntityRequest(entity.name))
   }
 
@@ -172,8 +188,21 @@ class EntityProcessor {
       .find(entity => entity.id === id)
   }
 
+  findEntityByName(name) {
+    return this.entities
+      // * I know, suuuuper hacky
+      .find(entity => entity.nameElement.textContent === name)
+  }
+
   getSelectedEntities() {
     return this.entities.filter(entity => entity.isSelected === true)
+  }
+
+  // * yeah this is a hacky way of handing the data back up, but I'm just trying to rattle this out sooooooodealwithit
+  updateStageCallback(entityName, color) {
+    const entity = this.findEntityByName(entityName)
+    entity.statusLabel.textContent = "⬤"
+    entity.statusLabel.style.color = color
   }
 }
 

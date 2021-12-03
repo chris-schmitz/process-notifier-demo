@@ -33,7 +33,11 @@ public class MessageController {
         processorService.processEntity(entity);
     }
 
-    //public void sendStatusUpdate(String from, ResponseType type) {
-    //    simpMessagingTemplate.convertAndSend("/topic/messages", new ProcessEntityResponse("status-update", "test", type));
+    //@MessageMapping("/process/entities")
+    //public void processEntities(ProcessEntityRequest request) throws InterruptedException {
+    //    Entity entity = entityFactory.build("some user", request.getName());
+    //
+    //    processorService.processEntity(entity);
     //}
+    //
 }

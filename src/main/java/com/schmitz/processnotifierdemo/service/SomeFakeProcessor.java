@@ -28,7 +28,7 @@ public class SomeFakeProcessor {
         Arrays.stream(ProcessingStages.values()).forEach(type -> {
             try {
                 this.sleep();
-                simpMessagingTemplate.convertAndSend(responseFactory.build(entity.getName(), entity.getFrom(), type));
+                simpMessagingTemplate.convertAndSend("/topic/messages", responseFactory.build(entity.getName(), entity.getFrom(), type));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -37,6 +37,10 @@ public class SomeFakeProcessor {
 
     private void sleep() throws InterruptedException {
         // ^ fancy unreadable handwavy way of saying "inclusive random number between min and max" ;p
-        Thread.sleep(new Random().nextInt(this.sleepMax - this.sleepMin - 1) + this.sleepMin);
+        Thread.sleep(new Random().nextInt(secondsToMilliseconds(this.sleepMax) - secondsToMilliseconds(this.sleepMin) - 1) + secondsToMilliseconds(this.sleepMin));
+    }
+
+    private Integer secondsToMilliseconds(Integer seconds) {
+        return seconds * 1000;
     }
 }
