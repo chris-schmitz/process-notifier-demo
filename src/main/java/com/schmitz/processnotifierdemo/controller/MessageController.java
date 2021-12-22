@@ -1,6 +1,7 @@
 package com.schmitz.processnotifierdemo.controller;
 
 import com.schmitz.processnotifierdemo.dto.Entity;
+import com.schmitz.processnotifierdemo.dto.ProcessEntitiesRequest;
 import com.schmitz.processnotifierdemo.dto.ProcessEntityRequest;
 import com.schmitz.processnotifierdemo.factories.EntityFactory;
 import com.schmitz.processnotifierdemo.service.EntityProcessorService;
@@ -33,11 +34,11 @@ public class MessageController {
         processorService.processEntity(entity);
     }
 
-    //@MessageMapping("/process/entities")
-    //public void processEntities(ProcessEntityRequest request) throws InterruptedException {
-    //    Entity entity = entityFactory.build("some user", request.getName());
-    //
-    //    processorService.processEntity(entity);
-    //}
-    //
+    @MessageMapping("/process/entities")
+    public void processEntities(ProcessEntitiesRequest request) throws InterruptedException {
+        System.out.println(request);
+        //Entity entity = entityFactory.build("some user", request.getName());
+        //processorService.processEntity(entity);
+    }
+
 }

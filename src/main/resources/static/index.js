@@ -131,11 +131,6 @@ class EntityProcessor {
   constructor(websocketManager) {
     this.websocketManager = websocketManager
     this.websocketManager.setUpdateStageCallback(this.updateStageCallback.bind(this))
-    // this.websocketManager.setUpdateStageCallback((message) => {
-    //   debugger
-    //   console.log('in the update stage callback')
-    //   console.log(message)
-    // })
   }
 
   entities = [];
@@ -171,7 +166,7 @@ class EntityProcessor {
 
   startProcessingSelectedEntities() {
     const request = new ProcessEntitiesRequest()
-    this.getSelectedEntities().map(entity => request.addEntity(entity.name))
+    this.getSelectedEntities().forEach(entity => request.addEntity(entity.name))
     this.websocketManager.sendMessage(request)
   }
 
@@ -201,7 +196,6 @@ class EntityProcessor {
   // * yeah this is a hacky way of handing the data back up, but I'm just trying to rattle this out sooooooodealwithit
   updateStageCallback(entityName, color) {
     const entity = this.findEntityByName(entityName)
-    entity.statusLabel.textContent = "⬤"
     entity.statusLabel.style.color = color
   }
 }
